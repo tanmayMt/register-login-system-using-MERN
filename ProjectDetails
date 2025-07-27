@@ -1,0 +1,16 @@
+🔧 Features:
+Register a new user (name, email, password)
+
+Login with email & password
+
+JWT-based token auth
+
+Protected route to fetch user profile
+
+MongoDB for storing user
+
+React for frontend
+
+Express for backend
+
+  "type": "commonjs",
