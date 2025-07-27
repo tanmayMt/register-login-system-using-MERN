@@ -1,37 +1,66 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import API from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-function Login() {
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [msg, setMsg] = useState("");
+const Login = () => {
   const navigate = useNavigate();
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const handleSubmit = async e => {
-    e.preventDefault();
-    try {
-      const res = await API.post("/users/login", form);
-      localStorage.setItem("token", res.data.token);
-      setMsg("Login successful!");
-      navigate("/profile");
-    } catch (err) {
-      setMsg(err.response.data.message);
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: ""
+    },
+    validationSchema: Yup.object({
+      email: Yup.string().email("Invalid email").required("Required"),
+      password: Yup.string().min(2, "Min 2 chars").required("Required")
+    }),
+    onSubmit: async (values) => {
+      try {
+        const res = await API.post("/users/login", values);
+        localStorage.setItem("token", res.data.token);
+        toast.success("Login successful");
+        navigate("/profile");
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Login failed");
+      }
     }
-  };
+  });
 
   return (
     <div className="card p-4 shadow-sm">
       <h2>Login</h2>
-      {msg && <div className="alert alert-info">{msg}</div>}
-      <form onSubmit={handleSubmit}>
-        <input className="form-control mb-2" type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input className="form-control mb-2" type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <button className="btn btn-success w-100">Login</button>
+      <form onSubmit={formik.handleSubmit}>
+        <input
+          className="form-control mb-2"
+          name="email"
+          placeholder="Email"
+          type="email"
+          {...formik.getFieldProps("email")}
+        />
+        {formik.touched.email && formik.errors.email && (
+          <div className="text-danger">{formik.errors.email}</div>
+        )}
+
+        <input
+          className="form-control mb-2"
+          name="password"
+          placeholder="Password"
+          type="password"
+          {...formik.getFieldProps("password")}
+        />
+        {formik.touched.password && formik.errors.password && (
+          <div className="text-danger">{formik.errors.password}</div>
+        )}
+
+        <button className="btn btn-success w-100" type="submit">
+          Login
+        </button>
       </form>
     </div>
   );
-}
+};
 
 export default Login;
